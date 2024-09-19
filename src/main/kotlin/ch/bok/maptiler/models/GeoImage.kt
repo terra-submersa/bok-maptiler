@@ -1,12 +1,10 @@
 package ch.bok.maptiler.models
 
 import ch.bok.maptiler.utils.GeoUtils
-import org.geotools.coverage.grid.GridCoverage2D
 import org.geotools.coverage.grid.io.GridCoverage2DReader
 import org.geotools.coverage.grid.io.GridFormatFinder
 import org.geotools.geometry.DirectPosition2D
 import org.geotools.referencing.CRS
-import org.opengis.parameter.GeneralParameterValue
 import java.io.File
 import javax.imageio.ImageIO
 
@@ -29,8 +27,12 @@ data class GeoImage(
     fun getSECorner() = boundingBox.se
 
     fun getSWCorner() = Coords(boundingBox.nw.lon, boundingBox.se.lat, boundingBox.se.crs)
-    fun getGsd() {
-//
+    fun getGSD(): Double {
+        val xDist = getNWCorner().distance(getNECorner())
+        val yDist = getNWCorner().distance(getSWCorner())
+        val xGSD = xDist / dimensions.width.toDouble()
+        val yGSD = yDist / dimensions.height.toDouble()
+        return (xGSD + yGSD) / 2
     }
 
     companion object {

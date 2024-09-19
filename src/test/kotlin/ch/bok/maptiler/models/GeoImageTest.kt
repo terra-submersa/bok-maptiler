@@ -7,8 +7,18 @@ import org.junit.jupiter.api.Nested
 import kotlin.test.Test
 
 class GeoImageTest : GeoImageFixtures {
+
+    @Test
+    fun `should get GSD`(){
+        val file = anOrthoPhotoTifFile()
+        val image = GeoImage.fromFile(file)
+        val got = image.getGSD()
+
+        assertEquals(0.00094, got, 1e-3)
+    }
+
     @Nested
-    inner class CompanionObject {
+    inner class CompanionObj {
         @Test
         fun `should read bounding box from tiff`() {
             val file = anOrthoPhotoTifFile()
