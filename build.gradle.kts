@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.9.25"
+    kotlin("plugin.serialization") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
@@ -26,6 +27,7 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
     implementation("org.geotools:gt-main:28.0")
     implementation("org.geotools:gt-coverage:28.0")
     implementation("org.geotools:gt-geotiff:28.0")

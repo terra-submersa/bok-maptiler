@@ -1,25 +1,15 @@
 package ch.bok.maptiler.models
 
+import ch.bok.maptiler.utils.GeoUtils
+import org.geotools.coverage.grid.GridCoverage2D
+import org.geotools.coverage.grid.io.GridCoverage2DReader
 import org.geotools.coverage.grid.io.GridFormatFinder
 import org.geotools.geometry.DirectPosition2D
 import org.geotools.referencing.CRS
-import org.opengis.referencing.crs.CoordinateReferenceSystem
+import org.opengis.parameter.GeneralParameterValue
 import java.io.File
 import javax.imageio.ImageIO
 
-data class Coords(val lon: Double, val lat: Double) {
-
-    fun mid(other: Coords) = Coords((lon + other.lon) / 2, (lat + other.lat) / 2)
-    override fun toString(): String {
-        return "($lon, $lat)"
-    }
-}
-
-data class BoundingBox(val nw: Coords, val se: Coords) {
-    override fun toString(): String {
-        return "$nw - $se"
-    }
-}
 
 data class Dimensions(
     val width: Int,
@@ -31,21 +21,31 @@ data class Dimensions(
 }
 
 data class GeoImage(
-    val boundingBox: BoundingBox
+    val boundingBox: BoundingBox,
+    val dimensions: Dimensions
 ) {
+    fun getNWCorner() = boundingBox.nw
+    fun getNECorner() = Coords(boundingBox.se.lon, boundingBox.nw.lat, boundingBox.se.crs)
+    fun getSECorner() = boundingBox.se
+
+    fun getSWCorner() = Coords(boundingBox.nw.lon, boundingBox.se.lat, boundingBox.se.crs)
+    fun getGsd() {
+//
+    }
+
     companion object {
         fun getBoundingBox(imageFile: File): BoundingBox {
             val format = GridFormatFinder.findFormat(imageFile)
-            val reader = format.getReader(imageFile)
-            val coverage = reader.read()
+            val reader = format.getReader(imageFile) as GridCoverage2DReader
+            val coverage = reader.read(*emptyArray())
             val envelope = coverage.envelope
-            val transform = CRS.findMathTransform(envelope.coordinateReferenceSystem, targetCrs, false)
+            val transform = CRS.findMathTransform(envelope.coordinateReferenceSystem, GeoUtils.wgs84CRS, false)
 
             val upperWGS84 = transform.transform(envelope.upperCorner, DirectPosition2D())
             val lowerWGS84 = transform.transform(envelope.lowerCorner, DirectPosition2D())
             return BoundingBox(
-                Coords(lowerWGS84.coordinate[1], upperWGS84.coordinate[0]),
-                Coords(upperWGS84.coordinate[1], lowerWGS84.coordinate[0])
+                Coords(lowerWGS84.coordinate[1], upperWGS84.coordinate[0], GeoUtils.wgs84CRS),
+                Coords(upperWGS84.coordinate[1], lowerWGS84.coordinate[0], GeoUtils.wgs84CRS)
             )
         }
 
@@ -54,11 +54,11 @@ data class GeoImage(
             return Dimensions(image.width, image.height)
         }
 
-        val targetCrs: CoordinateReferenceSystem = CRS.decode("EPSG:4326");
         fun fromFile(imageFile: File): GeoImage {
 
             return GeoImage(
-                boundingBox = getBoundingBox(imageFile)
+                boundingBox = getBoundingBox(imageFile),
+                dimensions = getDimensions(imageFile)
             )
         }
     }
