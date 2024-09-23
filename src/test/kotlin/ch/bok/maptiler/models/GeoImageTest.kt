@@ -2,7 +2,6 @@ package ch.bok.maptiler.models
 
 import ch.bok.maptiler.GeoImageFixtures
 import ch.bok.maptiler.TestUtils
-import org.geotools.referencing.CRS
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.ParameterizedTest
@@ -12,12 +11,18 @@ import kotlin.test.Test
 
 class GeoImageTest : GeoImageFixtures {
 
-    val orthoPhotoImage = GeoImage.fromFile(TestUtils.getTestFile("odm_1/code/odm_orthophoto/odm_orthophoto.tif"))
+    val orthoPhotoImageUTM34N = anOrthoPhotoImage()
+    val orthoPhotoImageWGS84 = anOrthoPhotoImage("EPSG:4326")
+
     @Test
-    fun `should get GSD`(){
-        val file = anOrthoPhotoTifFile()
-        val image = GeoImage.fromFile(file)
-        val got = image.getGSD()
+    fun `should get GSD UTM34N`() {
+        val got = orthoPhotoImageUTM34N.getGSD()
+
+        assertEquals(0.00094, got, 1e-3)
+    }
+
+    fun `should get GSD WGS84`() {
+        val got = orthoPhotoImageWGS84.getGSD()
 
         assertEquals(0.00094, got, 1e-3)
     }
@@ -38,6 +43,7 @@ class GeoImageTest : GeoImageFixtures {
             assertEquals(expectedSE.lon, got.se.lon, 1e-6)
             assertEquals(expectedSE.lat, got.se.lat, 1e-6)
         }
+
         @Test
 
         fun `should read bounding box from tiff in UTM 34M`() {
@@ -56,8 +62,7 @@ class GeoImageTest : GeoImageFixtures {
 
         @Test
         fun `should read dimensions from tiff`() {
-            val file = TestUtils.getTestFile("odm_1/code/odm_orthophoto/odm_orthophoto.tif")
-            val got = GeoImage.getDimensions(file)
+            val got = orthoPhotoImageUTM34N.dimensions
 
             assertEquals(10999, got.width)
             assertEquals(11258, got.height)
@@ -65,34 +70,38 @@ class GeoImageTest : GeoImageFixtures {
     }
 
     @ParameterizedTest
-    @MethodSource("positionToCoords")
+    @MethodSource("positionToCoordsData")
     fun `positionToCoords`(
         pos: Position,
-        coords: Coords
+        coords: Coords,
+        crsCode: String
     ) {
-        val got = orthoPhotoImage.positionToCoords(pos)
+        val got = anOrthoPhotoImage(crsCode).positionToCoords(pos)
         assertEquals(coords.lon, got.lon, 1e-5)
         assertEquals(coords.lat, got.lat, 1e-5)
 
     }
 
     @ParameterizedTest
-    @MethodSource("positionToCoords")
+    @MethodSource("positionToCoordsData")
     fun `coordsToPosition`(
         pos: Position,
-        coords: Coords
+        coords: Coords,
+        crsCode: String,
     ) {
-        val got = orthoPhotoImage.coordsToPosition(coords)
+        val got = anOrthoPhotoImage(crsCode).coordsToPosition(coords)
         assertEquals(pos.x, got.x)
         assertEquals(pos.y, got.y)
 
     }
 
-    companion object:GeoImageFixtures {
+    companion object : GeoImageFixtures {
         @JvmStatic
-        fun positionToCoords() = listOf(
-            Arguments.of(Position(0, 0), aNWCornerUTM34M()),
-            Arguments.of(Position(10999, 11258), aSECornerUTM34M()),
+        fun positionToCoordsData() = listOf(
+            Arguments.of(Position(0, 0), aNWCornerWGS84(), "EPSG:4326"),
+            Arguments.of(Position(0, 0), aNWCornerUTM34M(), "EPSG:32634"),
+            Arguments.of(Position(10999, 11258), aSECornerWGS84(), "EPSG:4326"),
+            Arguments.of(Position(10999, 11258), aSECornerUTM34M(), "EPSG:32634"),
         )
     }
 }

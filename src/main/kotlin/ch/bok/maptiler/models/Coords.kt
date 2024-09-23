@@ -21,18 +21,18 @@ data class Coords(val lon: Double, val lat: Double, val crs: CoordinateReference
             throw IncoherentMidCRSException(this, other)
         }
 
-    fun distance(other: Coords)=
+    fun distance(other: Coords) =
         if (crs == other.crs) {
             JTS.orthodromicDistance(Coordinate(lon, lat), Coordinate(other.lon, other.lat), crs)
         } else {
             throw IncoherentDistanceCRSException(this, other)
         }
 
-    fun toCrs(target: CoordinateReferenceSystem): Coords{
+    fun toCrs(target: CoordinateReferenceSystem): Coords {
         val transform = CRS.findMathTransform(crs, target, false)
-        val to = transform.transform(DirectPosition2D(crs,lon, lat), DirectPosition2D())
+        val to = transform.transform(DirectPosition2D(crs, lon, lat), DirectPosition2D())
 
-        return Coords(to.coordinate[0],to.coordinate[1], target)
+        return Coords(to.coordinate[0], to.coordinate[1], target)
     }
 
     override fun toString(): String {
@@ -47,6 +47,8 @@ data class Coords(val lon: Double, val lat: Double, val crs: CoordinateReference
 
 data class BoundingBox(val nw: Coords, val se: Coords) {
     val crs = nw.crs
+
+    fun center() = nw.mid(se)
     override fun toString(): String {
         return "$nw - $se"
     }
