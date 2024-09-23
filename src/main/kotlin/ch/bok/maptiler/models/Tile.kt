@@ -1,9 +1,8 @@
 package ch.bok.maptiler.models
 
-import kotlin.math.PI
-import kotlin.math.asinh
-import kotlin.math.floor
-import kotlin.math.tan
+import ch.bok.maptiler.utils.GeoUtils
+import org.geotools.referencing.crs.DefaultGeographicCRS
+import kotlin.math.*
 
 data class TileCoords(
     val x: Long,
@@ -30,6 +29,14 @@ data class TileCoords(
                 ytile = (1L shl zoom) - 1
             }
             return TileCoords(xtile, ytile, zoom)
+        }
+
+        fun getNWTileCorner(tileCoords: TileCoords): Coords{
+            val n = 1L shl tileCoords.zoom
+            val lonDeg = tileCoords.x.toDouble() / n * 360.0 - 180.0
+            val latRad = atan(sinh(PI * (1 - 2 * tileCoords.y.toDouble() / n)))
+            val latDeg = Math.toDegrees(latRad)
+            return Coords(lonDeg, latDeg, GeoUtils.wgs84CRS)
         }
     }
 }
