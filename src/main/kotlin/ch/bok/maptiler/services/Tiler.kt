@@ -31,7 +31,7 @@ class Tiler(private val geoImage: GeoImage) {
 
         // add transparent bands on the outside of the image
         val canvasWidth = sePos.x - nwPos.x
-        val canvasHeight = nwPos.y - sePos.y
+        val canvasHeight = sePos.y - nwPos.y
         val canvasImage = BufferedImage(canvasWidth, canvasHeight, BufferedImage.TYPE_INT_ARGB)
 
         val g = canvasImage.createGraphics()
@@ -42,7 +42,7 @@ class Tiler(private val geoImage: GeoImage) {
 
         //scale the image
         val targetWidth = ((seTileCoords.x - nwTileCoords.x) * TileCoords.TILE_SIZE).toInt()
-        val targetHeight = ((nwTileCoords.y - seTileCoords.y) * TileCoords.TILE_SIZE).toInt()
+        val targetHeight = ((seTileCoords.y - nwTileCoords.y) * TileCoords.TILE_SIZE).toInt()
         val scaledImage = canvasImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_DEFAULT)
         val bufferedScaledImage = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
         val g2 = bufferedScaledImage.createGraphics()

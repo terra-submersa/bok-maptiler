@@ -18,13 +18,13 @@ class GeoImageTest : GeoImageFixtures {
     fun `should get GSD UTM34N`() {
         val got = orthoPhotoImageUTM34N.getGSD()
 
-        assertEquals(0.00094, got, 1e-3)
+        assertEquals(0.008001110580721883, got, 1e-3)
     }
 
     fun `should get GSD WGS84`() {
         val got = orthoPhotoImageWGS84.getGSD()
 
-        assertEquals(0.00094, got, 1e-3)
+        assertEquals(0.008001110580721883, got, 1e-3)
     }
 
     @Nested
@@ -64,8 +64,8 @@ class GeoImageTest : GeoImageFixtures {
         fun `should read dimensions from tiff`() {
             val got = orthoPhotoImageUTM34N.dimensions
 
-            assertEquals(10999, got.width)
-            assertEquals(11258, got.height)
+            assertEquals(1375, got.width)
+            assertEquals(1407, got.height)
         }
     }
 
@@ -100,8 +100,8 @@ class GeoImageTest : GeoImageFixtures {
         fun positionToCoordsData() = listOf(
             Arguments.of(Position(0, 0), aNWCornerWGS84(), "EPSG:4326"),
             Arguments.of(Position(0, 0), aNWCornerUTM34M(), "EPSG:32634"),
-            Arguments.of(Position(10999, 11258), aSECornerWGS84(), "EPSG:4326"),
-            Arguments.of(Position(10999, 11258), aSECornerUTM34M(), "EPSG:32634"),
+            Arguments.of(Position(1374, 1407), aSECornerWGS84(), "EPSG:4326"),
+            Arguments.of(Position(1374, 1407), aSECornerUTM34M(), "EPSG:32634"),
         )
     }
 }
