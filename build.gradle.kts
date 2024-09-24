@@ -36,6 +36,7 @@ dependencies {
     implementation("org.geotools:gt-referencing:28.0")
     implementation("it.geosolutions.jaiext.affine:jt-affine:1.1.26")
     implementation("it.geosolutions.jaiext.shadedrelief:jt-shadedrelief:1.1.26")
+    implementation("org.xerial:sqlite-jdbc:3.46.1.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -19,7 +19,6 @@ class TilerTest : GeoImageFixtures {
 
         val got = tiler.fitImageToTiles(zoomLevel)
 
-        // ImageIO.write(got.image, "png", File("/Users/amasselot/tmp/scaled_image.png"))
         assertEquals(1536, got.image.width)
         assertEquals(1536, got.image.width)
     }
@@ -32,7 +31,6 @@ class TilerTest : GeoImageFixtures {
 
         val got = tiler.fitImageToTiles(22)
 
-        ImageIO.write(got.image, "png", File("/Users/amasselot/tmp/scaled_image.png"))
         assertEquals(256, got.image.width)
         assertEquals(256, got.image.width)
     }
@@ -72,9 +70,7 @@ class TilerTest : GeoImageFixtures {
 
     @Test
     fun `Flow produces a list of element`() = runTest {
-
         val tiler = Tiler(orthoPhotoImage)
-
         val flow = tiler.tileGenerator(16)
 
         val list = mutableListOf<Tile>()

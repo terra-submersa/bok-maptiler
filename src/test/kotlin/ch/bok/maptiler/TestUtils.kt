@@ -9,5 +9,20 @@ class TestUtils {
                 TestUtils::class.java.classLoader.getResource(path)?.let{
                     return File(it.toURI())
                 }?: throw FileNotFoundException(path)
+
+        fun mkdir(path: String):File {
+            val directory = File(path)
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+            return directory
+        }
+
+        fun rm(path: String) {
+            val file = File(path)
+            if (file.exists()) {
+                file.delete()
+            }
+        }
     }
 }

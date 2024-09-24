@@ -96,7 +96,7 @@ class Tiler(private val geoImage: GeoImage) {
         g.dispose()
 
         //scale the image
-        val targetWidth = (max((seTileCoords.x - nwTileCoords.x),1) * TileCoords.TILE_SIZE).toInt()
+        val targetWidth = (max((seTileCoords.x - nwTileCoords.x), 1) * TileCoords.TILE_SIZE).toInt()
         val targetHeight = (max((seTileCoords.y - nwTileCoords.y), 1) * TileCoords.TILE_SIZE).toInt()
         val scaledImage = canvasImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_DEFAULT)
         val bufferedScaledImage = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)

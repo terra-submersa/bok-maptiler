@@ -49,6 +49,10 @@ data class BoundingBox(val nw: Coords, val se: Coords) {
     val crs = nw.crs
 
     fun center() = nw.mid(se)
+
+    fun toCrs(target: CoordinateReferenceSystem) =
+        BoundingBox(nw.toCrs(target), se.toCrs(target))
+
     override fun toString(): String {
         return "$nw - $se"
     }
