@@ -3,15 +3,18 @@ package ch.bok.maptiler.models
 import ch.bok.maptiler.utils.GeoUtils
 import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.opengis.referencing.crs.CoordinateReferenceSystem
+import java.awt.image.BufferedImage
 import kotlin.math.*
 
-class UnsupportedCoordinateReferenceSystemToGetTileXY(crs:CoordinateReferenceSystem):
-RuntimeException("Unsupported reference coordinate system ${crs.name} to get tile XY")
+class UnsupportedCoordinateReferenceSystemToGetTileXY(crs: CoordinateReferenceSystem) :
+    RuntimeException("Unsupported reference coordinate system ${crs.name} to get tile XY")
+
 data class TileCoords(
     val x: Long,
     val y: Long,
     val zoom: Int
 ) {
+    fun plus(dx: Int = 0, dy: Int = 0) = TileCoords(x + dx, y + dy, zoom)
     fun getNWTileCorner(): Coords {
         val n = 1L shl zoom
         val lonDeg = x.toDouble() / n * 360.0 - 180.0
@@ -28,7 +31,7 @@ data class TileCoords(
     companion object {
         val TILE_SIZE = 256
         fun getTileXY(coords: Coords, zoom: Int): TileCoords {
-            if(coords.crs != GeoUtils.wgs84CRS){
+            if (coords.crs != GeoUtils.wgs84CRS) {
                 throw UnsupportedCoordinateReferenceSystemToGetTileXY(coords.crs)
             }
             val latRad = Math.toRadians(coords.lat)
@@ -53,3 +56,5 @@ data class TileCoords(
 
     }
 }
+
+data class Tile(val image: BufferedImage, val coords: TileCoords)
