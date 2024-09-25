@@ -57,6 +57,28 @@ class MBTilesCreatorTest : GeoImageFixtures {
         val got = creator.execute("select * from tiles")
 
         assertEquals(52, got.size, "check the number of lines in the table")
+    }
 
+    @Test
+    fun insertBoth() {
+        val file = "tmp/test.mbtiles"
+        TestUtils.rm(file)
+        val metadata = MBTilesMetadata.build(
+            geoImage = orthoPhotoImage,
+            minZoomLevel = 16,
+            name = "paf",
+            attributes = mapOf(
+                "pouet" to 42,
+                "flapflap" to "la girafe"
+            )
+        )
+        val creator = MBTilesCreator(file)
+        creator.createSchema()
+        creator.insertMetadata(metadata)
+
+        val tiler = Tiler(orthoPhotoImage)
+        runBlocking {
+            creator.insertTiles(tiler.tileGenerator(16))
+        }
     }
 }

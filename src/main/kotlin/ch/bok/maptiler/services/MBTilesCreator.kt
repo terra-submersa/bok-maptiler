@@ -39,7 +39,7 @@ class MBTilesCreator(val filename: String) {
         val centerCoords = metadata.bounds.center()
         val center = "${centerCoords.lat},${centerCoords.lon}"
         insertOne("center", center)
-        insertOne("minzom", metadata.minZoom)
+        insertOne("minzoom", metadata.minZoom)
         insertOne("maxzoom", metadata.maxZoom)
         insertOne("attribution", metadata.attribution)
         metadata.attributes?.let { att ->
@@ -55,15 +55,16 @@ class MBTilesCreator(val filename: String) {
         insertTile(tile = it)
     }
 
-    fun insertTile(tile: Tile) {
+    private fun insertTile(tile: Tile) {
         val statement = connection.prepareStatement(INSERT_TILE_STATEMENT)
         statement.setInt(1, tile.coords.zoom)
-        statement.setLong(2, tile.coords.x)
-        statement.setLong(3, tile.coords.y)
+        statement.setInt(2, tile.coords.x.toInt())
+        statement.setInt(3, tile.coords.y.toInt())
         val baos = ByteArrayOutputStream()
         ImageIO.write(tile.image, "png", baos)
         statement.setBytes(4, baos.toByteArray())
-        statement?.executeUpdate()
+        statement.executeUpdate()
+        statement.close()
     }
 
     fun execute(query: String): List<List<Any?>> {
@@ -82,10 +83,11 @@ class MBTilesCreator(val filename: String) {
         val CREATE_SCHEMA_STATEMENTS = listOf(
             """
             CREATE TABLE tiles (
-                zoom_level INTEGER,
-                tile_column INTEGER,
-                tile_row INTEGER,
-                tile_data BLOB
+                zoom_level INTEGER NOT NULL,
+                tile_column INTEGER NOT NULL,
+                tile_row INTEGER NOT NULL,
+                tile_data BLOB NOT NULL,
+                UNIQUE (zoom_level, tile_column, tile_row) 
             )
             """.trimIndent(),
             """

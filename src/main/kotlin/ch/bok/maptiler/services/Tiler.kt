@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.flow
 import java.awt.Color
 import java.awt.Image
 import java.awt.image.BufferedImage
+import java.io.File
 import java.lang.Long.max
+import javax.imageio.ImageIO
 
 class Tiler(private val geoImage: GeoImage) {
     fun maxZoom() = OpenMapUtils.zoomLevelFromGSD(geoImage.getGSD(), geoImage.getCenter())
@@ -45,6 +47,7 @@ class Tiler(private val geoImage: GeoImage) {
                         TileCoords.TILE_SIZE,
                         TileCoords.TILE_SIZE
                     )
+                    ImageIO.write(tileImage, "png", File("tmp/${zoomLevel}-${nwTileCoords.x + i}-${nwTileCoords.y + j}.png"))
                     emit(
                         Tile(
                             image = tileImage,
