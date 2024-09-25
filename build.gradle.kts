@@ -1,3 +1,4 @@
+val springbootVersion="3.3.3"
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.serialization") version "1.9.25"
@@ -26,6 +27,9 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web:$springbootVersion")
+    implementation("org.springframework.boot:spring-boot-configuration-processor:$springbootVersion")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")

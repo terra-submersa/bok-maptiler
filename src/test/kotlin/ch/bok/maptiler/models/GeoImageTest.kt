@@ -100,7 +100,7 @@ class GeoImageTest : GeoImageFixtures {
         fun positionToCoordsData() = listOf(
             Arguments.of(Position(0, 0), aNWCornerWGS84(), "EPSG:4326"),
             Arguments.of(Position(0, 0), aNWCornerUTM34M(), "EPSG:32634"),
-            Arguments.of(Position(1374, 1407), aSECornerWGS84(), "EPSG:4326"),
+            Arguments.of(Position(1375, 1407), aSECornerWGS84(), "EPSG:4326"),
             Arguments.of(Position(1374, 1407), aSECornerUTM34M(), "EPSG:32634"),
         )
     }

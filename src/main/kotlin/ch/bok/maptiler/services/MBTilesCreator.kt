@@ -1,6 +1,5 @@
 package ch.bok.maptiler.services
 
-import ch.bok.maptiler.models.GeoImage
 import ch.bok.maptiler.models.MBTilesMetadata
 import ch.bok.maptiler.models.Tile
 import kotlinx.coroutines.flow.Flow
@@ -8,10 +7,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.ByteArrayOutputStream
 import java.sql.DriverManager
-import java.sql.ResultSet
 import javax.imageio.ImageIO
 
-class MBTilesCreator(val filename: String) {
+class MBTilesCreator(private val filename: String) {
     private val connection by lazy {
         Class.forName("org.sqlite.JDBC")
         val url: String = "jdbc:sqlite:${filename}"

@@ -3,7 +3,6 @@ package ch.bok.maptiler.services
 import ch.bok.maptiler.GeoImageFixtures
 import ch.bok.maptiler.TestUtils
 import ch.bok.maptiler.models.MBTilesMetadata
-import ch.bok.maptiler.utils.GeoUtils
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
@@ -22,15 +21,7 @@ class MBTilesCreatorTest : GeoImageFixtures {
     fun insertMetadata() {
         val file = "tmp/test-metadata.db"
         TestUtils.rm(file)
-        val metadata = MBTilesMetadata.build(
-            geoImage = orthoPhotoImage,
-            minZoomLevel = 16,
-            name = "paf le chien",
-            attributes = mapOf(
-                "pouet" to 42,
-                "flapflap" to "la girafe"
-            )
-        )
+        val metadata = anMBTilesMetadata()
         val creator = MBTilesCreator(file)
         creator.createSchema()
         creator.insertMetadata(metadata)
@@ -63,15 +54,7 @@ class MBTilesCreatorTest : GeoImageFixtures {
     fun insertBoth() {
         val file = "tmp/test.mbtiles"
         TestUtils.rm(file)
-        val metadata = MBTilesMetadata.build(
-            geoImage = orthoPhotoImage,
-            minZoomLevel = 16,
-            name = "paf",
-            attributes = mapOf(
-                "pouet" to 42,
-                "flapflap" to "la girafe"
-            )
-        )
+        val metadata = anMBTilesMetadata()
         val creator = MBTilesCreator(file)
         creator.createSchema()
         creator.insertMetadata(metadata)
