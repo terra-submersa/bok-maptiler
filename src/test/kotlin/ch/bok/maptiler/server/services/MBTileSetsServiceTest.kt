@@ -1,6 +1,7 @@
 package ch.bok.maptiler.server.services
 
 import ch.bok.maptiler.TestUtils
+import ch.bok.maptiler.models.mbtileserver.DBName
 import ch.bok.maptiler.server.configuration.MBTilesProperties
 import ch.bok.maptiler.server.services.MBTileSetsService
 import org.junit.jupiter.api.Assertions.*
@@ -15,7 +16,9 @@ class MBTileSetsServiceTest {
 
         val got = service.listTileSetFiles()
 
-        assertEquals(1, got.size)
-        assertTrue(got.first().endsWith(".mbtiles"), "listed files ends with .mbtiles")
+        val expectedDBName = DBName("test")
+        assertEquals(1, got.size, "directory should contain one file")
+        assertTrue(got.containsKey(expectedDBName), "file list should contain db")
+        assertTrue(got[expectedDBName]!!.endsWith(".mbtiles"), "File ends with .mbtiles")
     }
 }

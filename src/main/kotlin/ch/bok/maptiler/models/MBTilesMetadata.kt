@@ -6,6 +6,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 
 
+/**
+The format from the 1.3 MBTiles format specs
+https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
+ */
 data class MBTilesMetadata(
     val name: String,
     val bounds: BoundingBox,
@@ -16,11 +20,7 @@ data class MBTilesMetadata(
 ) {
     val format = "png"
     val type = "overlay"
-
-    /**
-     * convert into an MBTiles format
-     * https://github.com/mapbox/mbtiles-spec/blob/master/1.3/spec.md
-     */
+    
     fun toMBTilesDescriptor(): Map<String, Any?> {
         val boundsStr =
             "${bounds.nw.lon},${bounds.se.lat},${bounds.se.lon},${bounds.nw.lat}"
