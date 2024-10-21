@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 
 class MBTilesCreatorTest : GeoImageFixtures {
-    private val orthoPhotoImage = anOrthoPhotoImage("EPSG:4326")
+    private val orthoPhotoImage = anOrthoPhotoImage("EPSG:4326", file = "kouverta-500.tif")
 
     @BeforeEach
     fun setUp() {
@@ -47,7 +47,8 @@ class MBTilesCreatorTest : GeoImageFixtures {
         }
         val got = creator.execute("select * from tiles")
 
-        assertEquals(52, got.size, "check the number of lines in the table")
+        // -1 is to remove column names
+        assertEquals(aKouverta500TileList().size, got.size - 1, "check the number of lines in the table")
     }
 
     @Test
@@ -61,7 +62,7 @@ class MBTilesCreatorTest : GeoImageFixtures {
 
         val tiler = Tiler(orthoPhotoImage)
         runBlocking {
-            creator.insertTiles(tiler.tileGenerator(16))
+            creator.insertTiles(tiler.tileGenerator(17))
         }
     }
 }

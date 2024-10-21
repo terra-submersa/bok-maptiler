@@ -18,4 +18,5 @@ object GeoUtils {
     fun getCRS(crsCode: String) = factory.createCoordinateReferenceSystem(crsCode);
 
     val wgs84CRS: CoordinateReferenceSystem = getCRS("EPSG:4326")
+    val utm34NCRS: CoordinateReferenceSystem = getCRS("EPSG:32634")
 }

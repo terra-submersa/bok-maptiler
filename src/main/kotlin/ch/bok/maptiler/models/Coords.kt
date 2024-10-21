@@ -21,12 +21,18 @@ data class Coords(val lon: Double, val lat: Double, val crs: CoordinateReference
             throw IncoherentMidCRSException(this, other)
         }
 
-    fun distance(other: Coords) =
-        if (crs == other.crs) {
-            JTS.orthodromicDistance(Coordinate(lon, lat), Coordinate(other.lon, other.lat), crs)
-        } else {
-            throw IncoherentDistanceCRSException(this, other)
+    /**
+     * distance in meters
+     */
+    fun distance(other: Coords): Double {
+        if (crs != GeoUtils.utm34NCRS) {
+            return toCrs(GeoUtils.utm34NCRS).distance(other.toCrs(GeoUtils.utm34NCRS))
         }
+        if (crs == other.crs) {
+            return JTS.orthodromicDistance(Coordinate(lon, lat), Coordinate(other.lon, other.lat), crs)
+        }
+        throw IncoherentDistanceCRSException(this, other)
+    }
 
     fun toCrs(target: CoordinateReferenceSystem): Coords {
         val transform = CRS.findMathTransform(crs, target, false)
@@ -50,8 +56,24 @@ data class BoundingBox(val nw: Coords, val se: Coords) {
 
     fun center() = nw.mid(se)
 
+    fun ne() = nw.copy(lon = se.lon)
+    fun sw() = se.copy(lon = nw.lon)
+
     fun toCrs(target: CoordinateReferenceSystem) =
         BoundingBox(nw.toCrs(target), se.toCrs(target))
+
+    fun size() = width() to height()
+
+    fun height(): Double = if (crs != GeoUtils.utm34NCRS) {
+        toCrs(GeoUtils.utm34NCRS).height()
+    } else {
+        nw.distance(sw())
+    }
+
+    fun widthBottom() = sw().distance(se)
+    fun widthTop() = nw.distance(ne())
+    fun width() = nw.mid(ne()).distance(sw().mid(se))
+
 
     override fun toString(): String {
         return "$nw - $se"

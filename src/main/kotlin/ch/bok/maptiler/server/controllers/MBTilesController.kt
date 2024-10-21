@@ -24,7 +24,7 @@ class MBTilesController(
         return "$protocol://$domain:$port"
     }
 
-    @GetMapping("")
+    @GetMapping(value = ["/", ""])
     fun listTileSets(request: HttpServletRequest) =
         service.allTileSets
             .map { service.metadata(it.key, getUrlPrefix(request)) }

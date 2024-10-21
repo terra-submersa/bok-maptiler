@@ -1,7 +1,7 @@
 package ch.bok.maptiler.models
 
 import ch.bok.maptiler.GeoImageFixtures
-import ch.bok.maptiler.TestUtils
+import ch.bok.maptiler.utils.GeoUtils
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.ParameterizedTest
@@ -69,6 +69,52 @@ class GeoImageTest : GeoImageFixtures {
         }
     }
 
+    @Test
+    fun `image ratio is coherent between dimension and measures`() {
+        /*
+        gdalinfo src/test/resources/odm_orthophoto_384.tif
+        Size is 375, 384
+        Upper Left  (  688745.970, 4144537.752) ( 23d 7'59.56"E, 37d25'42.36"N)
+        Lower Left  (  688745.970, 4144526.494) ( 23d 7'59.55"E, 37d25'42.00"N)
+        Upper Right (  688756.965, 4144537.752) ( 23d 8' 0.01"E, 37d25'42.36"N)
+        Lower Right (  688756.965, 4144526.494) ( 23d 8' 0.00"E, 37d25'41.99"N)
+        Pixel Size = (0.029317708333110,-0.029317708333110)
+         */
+        val imageUTM = anOrthoPhotoImage("EPSG:32634", file = "odm_orthophoto_384.tif")
+
+        val expectedWidth=375
+        val expectedHeight=384
+        val expectedXDist = 688756.965 - 688745.970
+        val expectedYDist = 4144537.752 - 4144526.494
+
+        val bbUTM = imageUTM.boundingBox
+
+        assertEquals(expectedXDist, bbUTM.sw().distance(bbUTM.se), 2e-3)
+        assertEquals(expectedXDist, bbUTM.nw.distance(bbUTM.ne()), 2e-3)
+        assertEquals(expectedYDist, bbUTM.nw.distance(bbUTM.sw()), 2e-3)
+        assertEquals(expectedYDist, bbUTM.ne().distance(bbUTM.se), 2e-3)
+
+        assertEquals(expectedWidth/expectedXDist, expectedHeight/expectedYDist, 3e-3)
+
+
+    }
+
+    @Test
+    fun `a tile pixel should be square`() {
+        // expected from https://www.netzwolf.info/geo/math/tilebrowser.html?lat=37.42838242616285&lon=23.13327147498925&zoom=17#tile
+
+        val image = anOrthoPhotoImage( file = "odm_orthophoto_384.tif")
+        val imageCenter = image.getCenter()
+        val tile = TileCoords.getTileXY(imageCenter, 22)
+
+        val posNE = image.coordsToPosition(tile.getNWTileCorner())
+        val posSW = image.coordsToPosition(tile.getSETileCorner())
+
+        assertEquals(posSW.x - posNE.x, posSW.y - posNE.y)
+
+    }
+
+
     @ParameterizedTest
     @MethodSource("positionToCoordsData")
     fun `positionToCoords`(
@@ -101,7 +147,7 @@ class GeoImageTest : GeoImageFixtures {
             Arguments.of(Position(0, 0), aNWCornerWGS84(), "EPSG:4326"),
             Arguments.of(Position(0, 0), aNWCornerUTM34M(), "EPSG:32634"),
             Arguments.of(Position(1375, 1407), aSECornerWGS84(), "EPSG:4326"),
-            Arguments.of(Position(1374, 1407), aSECornerUTM34M(), "EPSG:32634"),
+            Arguments.of(Position(1375, 1407), aSECornerUTM34M(), "EPSG:32634"),
         )
     }
 }

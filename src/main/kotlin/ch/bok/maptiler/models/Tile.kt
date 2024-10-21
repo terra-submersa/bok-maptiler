@@ -1,7 +1,6 @@
 package ch.bok.maptiler.models
 
 import ch.bok.maptiler.utils.GeoUtils
-import org.geotools.referencing.crs.DefaultGeographicCRS
 import org.opengis.referencing.crs.CoordinateReferenceSystem
 import java.awt.image.BufferedImage
 import kotlin.math.*
@@ -17,13 +16,24 @@ data class TileCoords(
     fun plus(dx: Int = 0, dy: Int = 0) = TileCoords(x + dx, y + dy, zoom)
     fun getNWTileCorner(): Coords {
         val n = 1L shl zoom
-        val lonDeg = x.toDouble() / n * 360.0 - 180.0
-        val latRad = atan(sinh(PI * (1 - 2 * y.toDouble() / n)))
-        val latDeg = Math.toDegrees(latRad)
+        val x1 = x.toDouble() / n
+        val y1 = (n - 1 - y).toDouble() / n
+        val lonMerc = (x1 * 2 - 1) * PI
+        val latMerc = - (y1 * 2 - 1) * PI
+        val length = lonMerc
+        val width = 2 * atan(exp(latMerc)) - PI / 2
+
+        val lonDeg = length / PI * 180
+        val latDeg = width / PI * 180
         return Coords(lonDeg, latDeg, GeoUtils.wgs84CRS)
+
+//        val lonDeg = x.toDouble() / n * 360.0 - 180.0
+//        val latRad = atan(sinh(PI * (1 - 2 * (n - 1 - y.toDouble()) / n)))
+//        val latDeg = Math.toDegrees(latRad)
+//        return Coords(lonDeg, latDeg, GeoUtils.wgs84CRS)
     }
 
-    fun getSETileCorner(): Coords = TileCoords(x + 1, y + 1, zoom).getNWTileCorner()
+    fun getSETileCorner(): Coords = TileCoords(x + 1, y - 1, zoom).getNWTileCorner()
 
 
     override fun toString() = "$zoom/$x/$y"
@@ -32,11 +42,13 @@ data class TileCoords(
         val TILE_SIZE = 256
         fun getTileXY(coords: Coords, zoom: Int): TileCoords {
             if (coords.crs != GeoUtils.wgs84CRS) {
-                throw UnsupportedCoordinateReferenceSystemToGetTileXY(coords.crs)
+                return getTileXY(coords.toCrs(GeoUtils.wgs84CRS), zoom)
             }
             val latRad = Math.toRadians(coords.lat)
             var xtile = floor((coords.lon + 180) / 360 * (1L shl zoom)).toLong()
             var ytile = floor((1.0 - asinh(tan(latRad)) / PI) / 2 * (1L shl zoom)).toLong()
+
+            ytile = (1L shl zoom) - 1 - ytile
 
             if (xtile < 0) {
                 xtile = 0

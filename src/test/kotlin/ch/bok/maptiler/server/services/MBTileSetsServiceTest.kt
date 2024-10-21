@@ -17,7 +17,7 @@ class MBTileSetsServiceTest {
         val got = service.listTileSetFiles()
 
         val expectedDBName = DBName("test")
-        assertEquals(1, got.size, "directory should contain one file")
+        assertEquals(2, got.size, "directory should contain two files")
         assertTrue(got.containsKey(expectedDBName), "file list should contain db")
         assertTrue(got[expectedDBName]!!.endsWith(".mbtiles"), "File ends with .mbtiles")
     }

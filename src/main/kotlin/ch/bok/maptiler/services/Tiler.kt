@@ -10,6 +10,7 @@ import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.File
 import java.lang.Long.max
+import java.time.Instant
 import javax.imageio.ImageIO
 
 class Tiler(private val geoImage: GeoImage) {
@@ -24,9 +25,9 @@ class Tiler(private val geoImage: GeoImage) {
         val seCorner = geoImage.getSECorner(GeoUtils.wgs84CRS)
         val c = TileCoords.getTileXY(seCorner, zoomLevel)
         // if the image ends exactly on a tile, then we don't want to extend
-        val cInner = c.plus(-1, -1)
+        val cInner = c.plus(-1, +1)
         val cInnerPosition = geoImage.coordsToPosition(cInner.getSETileCorner())
-        if (cInnerPosition.x >= geoImage.dimensions.width && cInnerPosition.y >= geoImage.dimensions.height) {
+        if (cInnerPosition.x >= geoImage.dimensions.width && cInnerPosition.y <= geoImage.dimensions.height) {
             return cInner
         }
         return c
@@ -47,11 +48,12 @@ class Tiler(private val geoImage: GeoImage) {
                         TileCoords.TILE_SIZE,
                         TileCoords.TILE_SIZE
                     )
-                    ImageIO.write(tileImage, "png", File("tmp/${zoomLevel}-${nwTileCoords.x + i}-${nwTileCoords.y + j}.png"))
+                    val coords = TileCoords(nwTileCoords.x + i, nwTileCoords.y - j, zoomLevel)
+                    println("emit $coords")
                     emit(
                         Tile(
                             image = tileImage,
-                            coords = TileCoords(nwTileCoords.x + i, nwTileCoords.y + j, zoomLevel)
+                            coords = coords
                         )
                     )
                 }
@@ -76,10 +78,13 @@ class Tiler(private val geoImage: GeoImage) {
      *  * dimension must be a multiple ot Tile.TILE_SIZE
      *  * transparent bands shall be added to the outskirts
      *  NB: this method is suboptimal, as it first canvas with transparent surrounding before scaling it down.
-     *      This can lead to pretty large image if the percision is high and zoom level low.
+     *      This can lead to pretty large image if the precision is high and zoom level low.
      *      However, our usage here does not go in this problem. At least, should not.
      */
     fun fitImageToTiles(zoomLevel: Int): GeoImage {
+        val tag = "$zoomLevel-${Instant.now().toEpochMilli()}"
+        ImageIO.write(geoImage.image, "png", File("tmp/fitt-$tag-orig.png"))
+
         val nwTileCoords = getNWTileCoords(zoomLevel)
         val seTileCoords = getSETileCoords(zoomLevel)
         val nwTiledCorner = nwTileCoords.getNWTileCorner()
@@ -97,15 +102,18 @@ class Tiler(private val geoImage: GeoImage) {
         g.fillRect(0, 0, canvasWidth, canvasHeight)
         g.drawImage(geoImage.image, -nwPos.x, -nwPos.y, null)
         g.dispose()
+        ImageIO.write(canvasImage, "png", File("tmp/fitt-$tag-canvas.png"))
 
         //scale the image
-        val targetWidth = (max((seTileCoords.x - nwTileCoords.x), 1) * TileCoords.TILE_SIZE).toInt()
-        val targetHeight = (max((seTileCoords.y - nwTileCoords.y), 1) * TileCoords.TILE_SIZE).toInt()
+        val targetWidth = (max((seTileCoords.x - nwTileCoords.x + 1), 1) * TileCoords.TILE_SIZE).toInt()
+        val targetHeight = (max((nwTileCoords.y - seTileCoords.y), 1) * TileCoords.TILE_SIZE).toInt()
         val scaledImage = canvasImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_DEFAULT)
         val bufferedScaledImage = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
         val g2 = bufferedScaledImage.createGraphics()
         g2.drawImage(scaledImage, 0, 0, null)
         g2.dispose()
+        ImageIO.write(bufferedScaledImage, "png", File("tmp/fitt-$tag-scales.png"))
+
 
 
         return GeoImage(
