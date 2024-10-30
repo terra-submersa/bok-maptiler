@@ -13,7 +13,7 @@ import java.lang.Long.max
 import java.time.Instant
 import javax.imageio.ImageIO
 
-class Tiler(private val geoImage: GeoImage) {
+class Tiler(val geoImage: GeoImage) {
     fun maxZoom() = OpenMapUtils.zoomLevelFromGSD(geoImage.getGSD(), geoImage.getCenter())
 
     fun getNWTileCoords(zoomLevel: Int): TileCoords {
@@ -26,7 +26,7 @@ class Tiler(private val geoImage: GeoImage) {
         val c = TileCoords.getTileXY(seCorner, zoomLevel)
         // if the image ends exactly on a tile, then we don't want to extend
         val cInner = c.plus(-1, +1)
-        val cInnerPosition = geoImage.coordsToPosition(cInner.getSETileCorner())
+        val cInnerPosition = geoImage.coordsToPosition(cInner.seTileCorner())
         if (cInnerPosition.x >= geoImage.dimensions.width && cInnerPosition.y <= geoImage.dimensions.height) {
             return cInner
         }
@@ -87,8 +87,8 @@ class Tiler(private val geoImage: GeoImage) {
 
         val nwTileCoords = getNWTileCoords(zoomLevel)
         val seTileCoords = getSETileCoords(zoomLevel)
-        val nwTiledCorner = nwTileCoords.getNWTileCorner()
-        val seTiledCorner = seTileCoords.getSETileCorner()
+        val nwTiledCorner = nwTileCoords.nwTileCorner()
+        val seTiledCorner = seTileCoords.seTileCorner()
         val nwPos = geoImage.coordsToPosition(nwTiledCorner)
         val sePos = geoImage.coordsToPosition(seTiledCorner)
 
@@ -117,7 +117,7 @@ class Tiler(private val geoImage: GeoImage) {
 
 
         return GeoImage(
-            boundingBox = BoundingBox(nwTiledCorner, seTiledCorner),
+            boundingBox = BoundingBox(nwTiledCorner, seTiledCorner).toCrs(geoImage.boundingBox.crs),
             dimensions = Dimensions(targetWidth, targetHeight),
             image = bufferedScaledImage
         )

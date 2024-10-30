@@ -6,6 +6,7 @@ import org.geotools.geometry.jts.JTS
 import org.geotools.referencing.CRS
 import org.locationtech.jts.geom.Coordinate
 import org.opengis.referencing.crs.CoordinateReferenceSystem
+import kotlin.math.sqrt
 
 class IncoherentMidCRSException(c1: Coords, c2: Coords) :
     RuntimeException("Incoherent CRSException with mid() $c1 and $c2")
@@ -25,12 +26,15 @@ data class Coords(val lon: Double, val lat: Double, val crs: CoordinateReference
      * distance in meters
      */
     fun distance(other: Coords): Double {
-        if (crs != GeoUtils.utm34NCRS) {
+        if (crs != GeoUtils.utm34NCRS || other.crs != GeoUtils.utm34NCRS) {
             return toCrs(GeoUtils.utm34NCRS).distance(other.toCrs(GeoUtils.utm34NCRS))
         }
-        if (crs == other.crs) {
-            return JTS.orthodromicDistance(Coordinate(lon, lat), Coordinate(other.lon, other.lat), crs)
-        }
+//        if (crs == other.crs) {
+//            return JTS.orthodromicDistance(Coordinate(lon, lat), Coordinate(other.lon, other.lat), crs)
+//        }
+        val dx = lon - other.lon
+        val dy = lat - other.lat
+        return sqrt(dx * dx + dy * dy)
         throw IncoherentDistanceCRSException(this, other)
     }
 

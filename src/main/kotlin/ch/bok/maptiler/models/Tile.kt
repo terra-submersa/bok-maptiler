@@ -14,17 +14,18 @@ data class TileCoords(
     val zoom: Int
 ) {
     fun plus(dx: Int = 0, dy: Int = 0) = TileCoords(x + dx, y + dy, zoom)
-    fun getNWTileCorner(): Coords {
+    fun nwTileCorner(): Coords {
         val n = 1L shl zoom
         val x1 = x.toDouble() / n
         val y1 = (n - 1 - y).toDouble() / n
         val lonMerc = (x1 * 2 - 1) * PI
         val latMerc = - (y1 * 2 - 1) * PI
-        val length = lonMerc
-        val width = 2 * atan(exp(latMerc)) - PI / 2
 
-        val lonDeg = length / PI * 180
-        val latDeg = width / PI * 180
+        val lambda = lonMerc
+        val phi = 2 * atan(exp(latMerc)) - PI / 2
+
+        val lonDeg = lambda / PI * 180
+        val latDeg = phi / PI * 180
         return Coords(lonDeg, latDeg, GeoUtils.wgs84CRS)
 
 //        val lonDeg = x.toDouble() / n * 360.0 - 180.0
@@ -33,9 +34,9 @@ data class TileCoords(
 //        return Coords(lonDeg, latDeg, GeoUtils.wgs84CRS)
     }
 
-    fun getSETileCorner(): Coords = TileCoords(x + 1, y - 1, zoom).getNWTileCorner()
+    fun seTileCorner(): Coords = TileCoords(x + 1, y - 1, zoom).nwTileCorner()
 
-
+    fun boundingBox() = BoundingBox(nwTileCorner(), seTileCorner())
     override fun toString() = "$zoom/$x/$y"
 
     companion object {

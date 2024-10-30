@@ -21,15 +21,50 @@ class TileCoordsTest {
 
     @Test
     fun `get the tile NW coords coords from TileCoords`() {
-        val got = tileCoords.getNWTileCorner()
+        val got = tileCoords.nwTileCorner()
         assertEquals(coordsNW.lon, got.lon, 1e-5)
         assertEquals(coordsNW.lat, got.lat, 1e-5)
     }
+
     @Test
     fun `get the tile SE coords coords from TileCoords`() {
-        val got = tileCoords.getSETileCorner()
+        val got = tileCoords.seTileCorner()
         assertEquals(coordsSE.lon, got.lon, 1e-5)
         assertEquals(coordsSE.lat, got.lat, 1e-5)
+    }
+
+    @Nested
+    inner class Tile_73958_50821_17{
+        // https://www.netzwolf.info/geo/math/tilebrowser.html?lat=37.42838242616285&lon=23.13327147498925&zoom=17#tile
+        val tile = TileCoords(73958, (1 shl 17) - 1 - 50821, 17)
+
+        @Test
+        fun nw(){
+            val corner = tile.boundingBox().nw
+            assertEquals(23.131714, corner.lon, 1e-12)
+            assertEquals(37.429070, corner.lat, 1e-6)
+        }
+        @Test
+        fun se(){
+            val corner = tile.boundingBox().se
+            assertEquals(23.134461, corner.lon, 1e-6)
+            assertEquals(37.426888, corner.lat, 1e-6)
+        }
+        @Test
+        fun `height`() {
+            println(tile.boundingBox())
+
+
+            assertEquals(252.54 , tile.boundingBox().height())
+        }
+
+        @Test
+        fun `width`() {
+
+            assertEquals(252.54 , tile.boundingBox().width())
+        }
+
+
     }
 
     companion object : GeoImageFixtures {
@@ -57,6 +92,21 @@ class TileCoordsTest {
             Arguments.of(
                 13,
                 Coords(23.1331729888916, 37.42845602452845, GeoUtils.wgs84CRS),
+                TileCoords(4622L, 5015L, 13)
+            ),
+            Arguments.of(
+                17,
+                Coords(23.1331729888916, 37.42845602452845, GeoUtils.wgs84CRS).toCrs(GeoUtils.utm34NCRS),
+                TileCoords(73958L, 80250L, 17)
+            ),
+            Arguments.of(
+                17,
+                Coords(23.1332108258033, 37.428434250438066, GeoUtils.wgs84CRS).toCrs(GeoUtils.utm34NCRS),
+                TileCoords(73958L, 80250L, 17)
+            ),
+            Arguments.of(
+                13,
+                Coords(23.1331729888916, 37.42845602452845, GeoUtils.wgs84CRS).toCrs(GeoUtils.utm34NCRS),
                 TileCoords(4622L, 5015L, 13)
             ),
 

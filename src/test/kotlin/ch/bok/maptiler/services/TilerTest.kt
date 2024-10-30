@@ -4,6 +4,7 @@ import ch.bok.maptiler.GeoImageFixtures
 import ch.bok.maptiler.models.Dimensions
 import ch.bok.maptiler.models.Tile
 import ch.bok.maptiler.models.TileCoords
+import ch.bok.maptiler.utils.GeoUtils
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -11,7 +12,7 @@ import java.io.File
 import javax.imageio.ImageIO
 
 class TilerTest : GeoImageFixtures {
-    private val orthoPhotoImage = anOrthoPhotoImage("EPSG:4326")
+    private val orthoPhotoImage = anOrthoPhotoImage()
 
     @Test
     fun `fitImageToTiles with max zoom`() {
@@ -25,6 +26,7 @@ class TilerTest : GeoImageFixtures {
 
         assertEquals(1792, got.image.width)
         assertEquals(1792, got.image.width)
+        assertEquals(tiler.geoImage.boundingBox.crs, got.boundingBox.crs)
     }
 
 
@@ -46,7 +48,7 @@ class TilerTest : GeoImageFixtures {
         // gdal2tiles -v  -z 16-24 src/test/resources/odm_orthophoto_384.tif tmp/odm_384
         // find tmp/odm_384/22 -type f | wc -l
         val tiler = Tiler(
-            anOrthoPhotoImage("EPSG:4326", file = "odm_orthophoto_384.tif")
+            anOrthoPhotoImage(file = "odm_orthophoto_384.tif")
         )
 
         val got = tiler.fitImageToTiles(22)
@@ -79,7 +81,7 @@ class TilerTest : GeoImageFixtures {
 
     @Test
     fun `kouverta 500 fitted images `() {
-        val tiler = Tiler(anOrthoPhotoImage("EPSG:4326", file = "kouverta-500.tif"))
+        val tiler = Tiler(anOrthoPhotoImage(file = "kouverta-500.tif"))
         val got = tiler.fitImageToTiles(19)
         assertEquals(
             Dimensions(256 * 3, 256 * 3),
@@ -89,7 +91,7 @@ class TilerTest : GeoImageFixtures {
 
     @Test
     fun `kouverta 500 at zoom level 19 should produce a 3x3 tileset`() {
-        val tiler = Tiler(anOrthoPhotoImage("EPSG:4326", file = "kouverta-500.tif"))
+        val tiler = Tiler(anOrthoPhotoImage(file = "kouverta-500.tif"))
         val got = tiler.fitImageToTiles(19)
         ImageIO.write(got.image, "png", File("/Users/amasselot/tmp/kouverta-fitted.png"))
         assertEquals(
@@ -100,7 +102,7 @@ class TilerTest : GeoImageFixtures {
 
     @Test
     fun `Kouverta 500 flow produces a list of elements`() = runTest {
-        val tiler = Tiler(anOrthoPhotoImage("EPSG:4326", file = "kouverta-500.tif"))
+        val tiler = Tiler(anOrthoPhotoImage(file = "kouverta-500.tif"))
         val flow = tiler.tileGenerator(17)
 
         val accTiles = mutableListOf<Tile>()

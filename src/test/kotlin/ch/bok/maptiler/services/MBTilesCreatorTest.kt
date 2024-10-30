@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 
 class MBTilesCreatorTest : GeoImageFixtures {
-    private val orthoPhotoImage = anOrthoPhotoImage("EPSG:4326", file = "kouverta-500.tif")
+    private val orthoPhotoImage = anOrthoPhotoImage(file = "kouverta-500.tif")
 
     @BeforeEach
     fun setUp() {

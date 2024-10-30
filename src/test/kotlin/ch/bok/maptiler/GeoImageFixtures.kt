@@ -4,8 +4,8 @@ import ch.bok.maptiler.models.*
 
 interface GeoImageFixtures {
     fun anOrthoPhotoTifFile() = TestUtils.getTestFile("odm_orthophoto.tif")
-    fun anOrthoPhotoImage(crsCode: String? = null, file: String = "odm_orthophoto.tif") =
-        GeoImage.fromFile(TestUtils.getTestFile(file), crsCode = crsCode)
+    fun anOrthoPhotoImage( file: String = "odm_orthophoto.tif") =
+        GeoImage.fromFile(TestUtils.getTestFile(file))
 
     fun aNWCornerWGS84() = Coords.build(23.1332108258033, 37.428434250438066, "EPSG:4326")
     fun aSECornerWGS84() = Coords.build(23.133332212431817, 37.42833060029414, "EPSG:4326")

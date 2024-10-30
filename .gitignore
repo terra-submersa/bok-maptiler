@@ -42,3 +42,4 @@ out/
 .DS_Store
 /tmp/
 /src/main/kotlin/ch/bok/maptiler/tryerr/
+.Rproj.user

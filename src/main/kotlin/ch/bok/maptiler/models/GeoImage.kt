@@ -37,11 +37,15 @@ data class GeoImage(
             boundingBox.crs
         )
 
-    fun coordsToPosition(c: Coords) =
-        Position(
-            (dimensions.width * (c.lon - boundingBox.nw.lon) / (boundingBox.se.lon - boundingBox.nw.lon)).toInt(),
-            (dimensions.height * (c.lat - boundingBox.nw.lat) / (boundingBox.se.lat - boundingBox.nw.lat)).toInt(),
-        )
+    fun coordsToPosition(c: Coords): Position =
+        if (c.crs != GeoUtils.utm34NCRS) {
+            coordsToPosition(c.toCrs(GeoUtils.utm34NCRS))
+        } else {
+            Position(
+                (dimensions.width * (c.lon - boundingBox.nw.lon) / (boundingBox.se.lon - boundingBox.nw.lon)).toInt(),
+                (dimensions.height * (c.lat - boundingBox.nw.lat) / (boundingBox.se.lat - boundingBox.nw.lat)).toInt(),
+            )
+        }
 
     fun getNWCorner(crs: CoordinateReferenceSystem? = null) = crs?.let { boundingBox.nw.toCrs(it) } ?: boundingBox.nw
     fun getNECorner(crs: CoordinateReferenceSystem? = null) =
@@ -54,16 +58,22 @@ data class GeoImage(
             ?: Coords(boundingBox.nw.lon, boundingBox.se.lat, boundingBox.se.crs)
 
     fun getCenter() = boundingBox.nw.mid(boundingBox.se)
-    fun getGSD(): Double {
+    fun getXGSD(): Double {
         val xDist = getNWCorner().distance(getNECorner())
+        return xDist / dimensions.width.toDouble()
+    }
+
+    fun getYGSD(): Double {
         val yDist = getNWCorner().distance(getSWCorner())
-        val xGSD = xDist / dimensions.width.toDouble()
-        val yGSD = yDist / dimensions.height.toDouble()
-        return (xGSD + yGSD) / 2
+        return yDist / dimensions.height.toDouble()
+    }
+
+    fun getGSD(): Double {
+        return (getXGSD() + getYGSD()) / 2
     }
 
     companion object {
-        fun getBoundingBox(imageFile: File, crsCode: String? = null): BoundingBox {
+        fun getBoundingBox(imageFile: File): BoundingBox {
             val format = GridFormatFinder.findFormat(imageFile)
             val reader = format.getReader(imageFile) as GridCoverage2DReader
             val coverage = reader.read(*emptyArray())
@@ -72,17 +82,14 @@ data class GeoImage(
             val nw = Coords(envelope.getMinimum(0), envelope.getMaximum(1), envelope.coordinateReferenceSystem)
             val se = Coords(envelope.getMaximum(0), envelope.getMinimum(1), envelope.coordinateReferenceSystem)
 
-            return crsCode?.let {
-                val crs = GeoUtils.getCRS(it)
-                BoundingBox(nw.toCrs(crs), se.toCrs(crs))
-            } ?: BoundingBox(nw, se)
+            return BoundingBox(nw, se)
         }
 
-        fun fromFile(imageFile: File, crsCode: String? = null): GeoImage {
+        fun fromFile(imageFile: File): GeoImage {
             val image = ImageIO.read(imageFile)
 
             return GeoImage(
-                boundingBox = getBoundingBox(imageFile, crsCode),
+                boundingBox = getBoundingBox(imageFile),
                 dimensions = Dimensions(image.width, image.height),
                 image = image
             )
