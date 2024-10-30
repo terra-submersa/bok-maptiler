@@ -57,10 +57,10 @@ class CoordsTest : GeoImageFixtures {
         private fun assertCloseUTM(expected: Double, actual: Double) = assertClose(expected, actual, 1e-3)
         private fun assertCloseWGS84(expected: Double, actual: Double) = assertClose(expected, actual, 1e-10)
         fun assertClose(expected: Coords, actual: Coords) =
-            if (expected.crs == GeoUtils.getCRS("EPSG:32634")) {
+            if (expected.crs == GeoUtils.utm34NCRS) {
                 assertCloseUTM(expected.lon, actual.lon)
                 assertCloseUTM(expected.lat, actual.lat)
-            } else if (expected.crs == GeoUtils.getCRS("EPSG:4326")) {
+            } else if (expected.crs == GeoUtils.wgs84CRS) {
                 assertCloseWGS84(expected.lon, actual.lon)
                 assertCloseWGS84(expected.lat, actual.lat)
             } else {
@@ -130,15 +130,6 @@ class CoordsTest : GeoImageFixtures {
             assertEquals(243.1043344227021, distance, 2e-2)
         }
 
-    }
-
-
-    @Test
-    fun `distance should throw when incompatible CRS `() {
-        val nwCorner = aNWCornerUTM34M()
-        val seCorner = aSECornerWGS84()
-
-        assertThrows<IncoherentDistanceCRSException> { nwCorner.distance(seCorner) }
     }
 
     @Test

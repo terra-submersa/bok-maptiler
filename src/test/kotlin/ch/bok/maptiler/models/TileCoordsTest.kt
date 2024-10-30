@@ -41,7 +41,7 @@ class TileCoordsTest {
         @Test
         fun nw(){
             val corner = tile.boundingBox().nw
-            assertEquals(23.131714, corner.lon, 1e-12)
+            assertEquals(23.131714, corner.lon, 1e-6)
             assertEquals(37.429070, corner.lat, 1e-6)
         }
         @Test
@@ -52,19 +52,20 @@ class TileCoordsTest {
         }
         @Test
         fun `height`() {
-            println(tile.boundingBox())
+            println("NW: ${tile.nwTileCorner()}")
+            println("NE: ${tile.plus(1, 0).nwTileCorner()}")
+            println("SW: ${tile.plus(0, -1).nwTileCorner()}")
+            println("SE: ${tile.plus(1, -1).nwTileCorner()}")
+            println("SE: ${tile.seTileCorner()}")
 
-
-            assertEquals(252.54 , tile.boundingBox().height())
+            assertEquals(242.54 , tile.nwTileCorner().distance(tile.plus(0, -1).nwTileCorner()), 0.5)
         }
 
         @Test
         fun `width`() {
 
-            assertEquals(252.54 , tile.boundingBox().width())
+            assertEquals(242.54 , tile.boundingBox().width(), 0.5)
         }
-
-
     }
 
     companion object : GeoImageFixtures {

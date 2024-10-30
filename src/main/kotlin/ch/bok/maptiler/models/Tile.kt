@@ -19,7 +19,7 @@ data class TileCoords(
         val x1 = x.toDouble() / n
         val y1 = (n - 1 - y).toDouble() / n
         val lonMerc = (x1 * 2 - 1) * PI
-        val latMerc = - (y1 * 2 - 1) * PI
+        val latMerc = -(y1 * 2 - 1) * PI
 
         val lambda = lonMerc
         val phi = 2 * atan(exp(latMerc)) - PI / 2

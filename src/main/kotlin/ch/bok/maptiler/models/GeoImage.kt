@@ -3,8 +3,6 @@ package ch.bok.maptiler.models
 import ch.bok.maptiler.utils.GeoUtils
 import org.geotools.coverage.grid.io.GridCoverage2DReader
 import org.geotools.coverage.grid.io.GridFormatFinder
-import org.geotools.geometry.DirectPosition2D
-import org.geotools.referencing.CRS
 import org.opengis.referencing.crs.CoordinateReferenceSystem
 import java.awt.image.BufferedImage
 import java.io.File
