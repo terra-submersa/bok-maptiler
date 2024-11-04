@@ -1,6 +1,7 @@
 package ch.bok.maptiler.services
 
 import ch.bok.maptiler.models.*
+import ch.bok.maptiler.models.TileCoords.Companion.TILE_SIZE
 import ch.bok.maptiler.utils.GeoUtils
 import ch.bok.maptiler.utils.OpenMapUtils
 import kotlinx.coroutines.flow.Flow
@@ -9,9 +10,23 @@ import java.awt.Color
 import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.File
-import java.lang.Long.max
 import java.time.Instant
 import javax.imageio.ImageIO
+
+data class GeoImageTilePositioning(
+    val tcwfNW: TileCoordsPosition,
+    val tcwfSE: TileCoordsPosition,
+    val xBandLeft: Int,
+    val xBandRight: Int,
+    val yBandTop: Int,
+    val yBandBottom: Int,
+    val imageTileWith: Int,
+    val imageTileHeight: Int,
+) {
+    fun tilingWidth() = ((tcwfSE.coords.x - tcwfNW.coords.x + 1) * TILE_SIZE).toInt()
+    fun tilingHeight() = ((tcwfNW.coords.y - tcwfSE.coords.y + 1) * TILE_SIZE).toInt()
+
+}
 
 class Tiler(val geoImage: GeoImage) {
     fun maxZoom() = OpenMapUtils.zoomLevelFromGSD(geoImage.getGSD(), geoImage.getCenter())
@@ -33,10 +48,51 @@ class Tiler(val geoImage: GeoImage) {
         return c
     }
 
+    fun tileCoordsPosition(imgPos: Position, zoomLevel: Int): TileCoordsPosition {
+        val pointCoords = geoImage.positionToCoords(imgPos)
+        val tcwf = TileCoords.getTileXYWithFrac(pointCoords, zoomLevel)
+        val posNW = geoImage.coordsToPosition(tcwf.coords.nwTileCorner())
+        val posSE = geoImage.coordsToPosition(tcwf.coords.seTileCorner())
+        val x0 = posNW.x
+        val x1 = posSE.x
+        val y0 = posNW.y
+        val y1 = posSE.y
+        return TileCoordsPosition(
+            tcwf.coords,
+            Position((tcwf.frac.first * TILE_SIZE).toInt(), (tcwf.frac.second * TILE_SIZE).toInt())
+        )
+    }
+
+    fun tilePositioning(zoomLevel: Int): GeoImageTilePositioning {
+        val tcwfNW = tileCoordsPosition(Position(0, 0), zoomLevel)
+        val tcwfSE = tileCoordsPosition(
+            Position(geoImage.dimensions.width - 1, geoImage.dimensions.height - 1),
+            zoomLevel
+        )
+
+        val xBandLeft = tcwfNW.position.x
+        val xBandRight = TILE_SIZE - tcwfSE.position.x
+        val yBandTop = tcwfNW.position.y
+        val yBandBottom = TILE_SIZE - tcwfSE.position.y
+        val imageTileWith = (tcwfSE.coords.x - tcwfNW.coords.x + 1) * TILE_SIZE - xBandLeft - xBandRight
+        val imageTileHeight = (tcwfNW.coords.y - tcwfSE.coords.y + 1) * TILE_SIZE - yBandTop - yBandBottom
+
+        return GeoImageTilePositioning(
+            tcwfNW = tcwfNW,
+            tcwfSE = tcwfSE,
+            xBandLeft = xBandLeft,
+            xBandRight = xBandRight,
+            yBandTop = yBandTop,
+            yBandBottom = yBandBottom,
+            imageTileWith = imageTileWith.toInt(),
+            imageTileHeight = imageTileHeight.toInt()
+        )
+
+    }
+
     fun tileGenerator(minZoomLevel: Int): Flow<Tile> = flow {
-        val maxZoomLevel = maxZoom()
-        (minZoomLevel..maxZoom()).reversed().fold(fitImageToTiles(maxZoomLevel)) { gImg, zoomLevel ->
-            val fittedImage = Tiler(gImg).fitImageToTiles(zoomLevel)
+        (minZoomLevel..maxZoom()).forEach { zoomLevel ->
+            val fittedImage = fitImageToTiles(zoomLevel)
             val nwCorner = fittedImage.getNWCorner(GeoUtils.wgs84CRS)
             val nwTileCoords = TileCoords.getTileXY(nwCorner, zoomLevel)
 
@@ -58,16 +114,6 @@ class Tiler(val geoImage: GeoImage) {
                     )
                 }
             }
-            // divide the size by 2
-            val nextWidth = fittedImage.dimensions.width / 2
-            val nextHeight = fittedImage.dimensions.height / 2
-            val nextImage = fittedImage.image.getScaledInstance(nextWidth, nextHeight, Image.SCALE_SMOOTH)
-            val nextBufferedImage = BufferedImage(nextWidth, nextHeight, BufferedImage.TYPE_INT_ARGB)
-            val g = nextBufferedImage.graphics
-            g.drawImage(nextImage, 0, 0, null)
-            g.dispose()
-            val nextGeoImage = GeoImage(fittedImage.boundingBox, Dimensions(nextWidth, nextHeight), nextBufferedImage)
-            nextGeoImage
         }
 
     }
@@ -77,49 +123,35 @@ class Tiler(val geoImage: GeoImage) {
      *  * properly zoomed
      *  * dimension must be a multiple ot Tile.TILE_SIZE
      *  * transparent bands shall be added to the outskirts
-     *  NB: this method is suboptimal, as it first canvas with transparent surrounding before scaling it down.
-     *      This can lead to pretty large image if the precision is high and zoom level low.
-     *      However, our usage here does not go in this problem. At least, should not.
      */
     fun fitImageToTiles(zoomLevel: Int): GeoImage {
         val tag = "$zoomLevel-${Instant.now().toEpochMilli()}"
-        ImageIO.write(geoImage.image, "png", File("tmp/fitt-$tag-orig.png"))
 
-        val nwTileCoords = getNWTileCoords(zoomLevel)
-        val seTileCoords = getSETileCoords(zoomLevel)
-        val nwTiledCorner = nwTileCoords.nwTileCorner()
-        val seTiledCorner = seTileCoords.seTileCorner()
-        val nwPos = geoImage.coordsToPosition(nwTiledCorner)
-        val sePos = geoImage.coordsToPosition(seTiledCorner)
-
-        // add transparent bands on the outside of the image
-        val canvasWidth = sePos.x - nwPos.x
-        val canvasHeight = sePos.y - nwPos.y
-        val canvasImage = BufferedImage(canvasWidth, canvasHeight, BufferedImage.TYPE_INT_ARGB)
-
-        val g = canvasImage.createGraphics()
-        g.color = Color(0f, 0f, 0f, 0f)
-        g.fillRect(0, 0, canvasWidth, canvasHeight)
-        g.drawImage(geoImage.image, -nwPos.x, -nwPos.y, null)
-        g.dispose()
-        ImageIO.write(canvasImage, "png", File("tmp/fitt-$tag-canvas.png"))
+        val tilePos = tilePositioning(zoomLevel)
 
         //scale the image
-        val targetWidth = (max((seTileCoords.x - nwTileCoords.x + 1), 1) * TileCoords.TILE_SIZE).toInt()
-        val targetHeight = (max((nwTileCoords.y - seTileCoords.y), 1) * TileCoords.TILE_SIZE).toInt()
-        val scaledImage = canvasImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_DEFAULT)
-        val bufferedScaledImage = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB)
+        val scaledImage =
+            geoImage.image.getScaledInstance(tilePos.imageTileWith, tilePos.imageTileHeight, Image.SCALE_DEFAULT)
+        val bufferedScaledImage =
+            BufferedImage(tilePos.imageTileWith, tilePos.imageTileHeight, BufferedImage.TYPE_INT_ARGB)
         val g2 = bufferedScaledImage.createGraphics()
         g2.drawImage(scaledImage, 0, 0, null)
         g2.dispose()
-        ImageIO.write(bufferedScaledImage, "png", File("tmp/fitt-$tag-scales.png"))
 
+        val canvasImage = BufferedImage(tilePos.tilingWidth(), tilePos.tilingHeight(), BufferedImage.TYPE_INT_ARGB)
 
+        val g = canvasImage.createGraphics()
+        g.color = Color(0f, 0f, 0f, 0f)
+        g.fillRect(0, 0, tilePos.tilingWidth(), tilePos.tilingHeight())
+        g.drawImage(scaledImage, tilePos.xBandLeft, tilePos.yBandTop, null)
+        g.dispose()
 
         return GeoImage(
-            boundingBox = BoundingBox(nwTiledCorner, seTiledCorner).toCrs(geoImage.boundingBox.crs),
-            dimensions = Dimensions(targetWidth, targetHeight),
-            image = bufferedScaledImage
+            boundingBox = BoundingBox(tilePos.tcwfNW.coords.nwTileCorner(), tilePos.tcwfSE.coords.seTileCorner()).toCrs(
+                geoImage.boundingBox.crs
+            ),
+            dimensions = Dimensions(tilePos.tilingWidth(), tilePos.tilingHeight()),
+            image = canvasImage
         )
     }
 

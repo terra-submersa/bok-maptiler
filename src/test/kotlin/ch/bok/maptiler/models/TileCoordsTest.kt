@@ -52,12 +52,6 @@ class TileCoordsTest {
         }
         @Test
         fun `height`() {
-            println("NW: ${tile.nwTileCorner()}")
-            println("NE: ${tile.plus(1, 0).nwTileCorner()}")
-            println("SW: ${tile.plus(0, -1).nwTileCorner()}")
-            println("SE: ${tile.plus(1, -1).nwTileCorner()}")
-            println("SE: ${tile.seTileCorner()}")
-
             assertEquals(242.54 , tile.nwTileCorner().distance(tile.plus(0, -1).nwTileCorner()), 0.5)
         }
 

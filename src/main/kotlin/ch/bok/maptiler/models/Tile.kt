@@ -41,13 +41,16 @@ data class TileCoords(
 
     companion object {
         val TILE_SIZE = 256
-        fun getTileXY(coords: Coords, zoom: Int): TileCoords {
+        fun getTileXYWithFrac(coords: Coords, zoom: Int): TileCoordsWithFrac {
             if (coords.crs != GeoUtils.wgs84CRS) {
-                return getTileXY(coords.toCrs(GeoUtils.wgs84CRS), zoom)
+                return getTileXYWithFrac(coords.toCrs(GeoUtils.wgs84CRS), zoom)
             }
             val latRad = Math.toRadians(coords.lat)
-            var xtile = floor((coords.lon + 180) / 360 * (1L shl zoom)).toLong()
-            var ytile = floor((1.0 - asinh(tan(latRad)) / PI) / 2 * (1L shl zoom)).toLong()
+            val xtileFrac = (coords.lon + 180) / 360 * (1L shl zoom)
+            val ytileFrac = (1.0 - asinh(tan(latRad)) / PI) / 2 * (1L shl zoom)
+            var xtile = floor(xtileFrac).toLong()
+            var ytile = floor(ytileFrac).toLong()
+            val frac = (xtileFrac - xtile) to (ytileFrac - ytile)
 
             ytile = (1L shl zoom) - 1 - ytile
 
@@ -63,11 +66,26 @@ data class TileCoords(
             if (ytile >= (1 shl zoom)) {
                 ytile = (1L shl zoom) - 1
             }
-            return TileCoords(xtile, ytile, zoom)
+            return TileCoordsWithFrac(
+                TileCoords(xtile, ytile, zoom),
+                frac
+            )
         }
 
-
+        fun getTileXY(coords: Coords, zoom: Int): TileCoords =
+            getTileXYWithFrac(coords, zoom).coords
     }
 }
 
+data class TileCoordsWithFrac(
+    val coords: TileCoords,
+    val frac: Pair<Double, Double>
+)
+
+data class TileCoordsPosition(
+    val coords: TileCoords,
+    val position: Position
+)
+
 data class Tile(val image: BufferedImage, val coords: TileCoords)
+

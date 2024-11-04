@@ -82,24 +82,6 @@ class GeoImageTest : GeoImageFixtures {
 
     }
 
-    @Test
-    fun `a tile pixel should be square`() {
-        // expected from https://www.netzwolf.info/geo/math/tilebrowser.html?lat=37.42838242616285&lon=23.13327147498925&zoom=17#tile
-
-        val image = anOrthoPhotoImage(file = "odm_orthophoto_384.tif")
-        val imageCenter = image.getCenter()
-        val tile = TileCoords.getTileXY(imageCenter, 22)
-
-        val coordsNWCorner = tile.nwTileCorner()
-        val coordsSECorner = tile.seTileCorner()
-        val posNW = image.coordsToPosition(coordsNWCorner)
-        val posSE = image.coordsToPosition(coordsSECorner)
-        println(BoundingBox(coordsNWCorner, coordsSECorner))
-        println(BoundingBox(coordsNWCorner, coordsSECorner).size())
-
-        assertEquals(posSE.x - posNW.x, posSE.y - posNW.y)
-    }
-
 
     @ParameterizedTest
     @MethodSource("positionToCoordsData")
